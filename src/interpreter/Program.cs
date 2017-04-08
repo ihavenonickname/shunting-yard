@@ -31,7 +31,7 @@ namespace interpreter
             {
                 Console.WriteLine(new ShuntingYard().Interpret(input));
             }
-            catch (LexicalException e)
+            catch (InterpreterException e)
             {
                 Console.WriteLine(e.FormattedMessage);
             }

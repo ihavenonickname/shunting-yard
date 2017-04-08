@@ -30,11 +30,13 @@ namespace interpreter
         {
             public readonly string Lexeme;
             public readonly Token Token;
+            public readonly int Position;
 
-            public Symbol(string lexeme, Token token)
+            public Symbol(string lexeme, Token token, int position)
             {
                 Lexeme = lexeme;
                 Token = token;
+                Position = position;
             }
         }
 
@@ -58,14 +60,16 @@ namespace interpreter
             associativity.Add(Token.Division, Associativity.Left);
             associativity.Add(Token.Power, Associativity.Right);
 
-            patterns.Add(Token.Number, new Regex(@"^-?\d+(\.\d+)?"));
-            patterns.Add(Token.LeftParentheses, new Regex(@"^\("));
-            patterns.Add(Token.RightParentheses, new Regex(@"^\)"));
-            patterns.Add(Token.Addiction, new Regex(@"^\+"));
-            patterns.Add(Token.Subtraction, new Regex(@"^-"));
-            patterns.Add(Token.Multiplication, new Regex(@"^\*"));
-            patterns.Add(Token.Division, new Regex(@"^/"));
-            patterns.Add(Token.Power, new Regex(@"^\^"));
+            Func<string, Regex> p = str => new Regex($"^{str}");
+
+            patterns.Add(Token.Number, p(@"-?\d+(\.\d+)?"));
+            patterns.Add(Token.LeftParentheses, p(@"\("));
+            patterns.Add(Token.RightParentheses, p(@"\)"));
+            patterns.Add(Token.Addiction, p(@"\+"));
+            patterns.Add(Token.Subtraction, p(@"-"));
+            patterns.Add(Token.Multiplication, p(@"\*"));
+            patterns.Add(Token.Division, p(@"/"));
+            patterns.Add(Token.Power, p(@"\^"));
         }
 
         private List<Symbol> Symbolize(string input)
@@ -75,7 +79,8 @@ namespace interpreter
 
             while (inputTrimmed.Length > 0)
             {
-                var oldSize = symbols.Count;
+                var previousCount = symbols.Count;
+                var position = input.Length - inputTrimmed.Length + 1;
 
                 foreach (var pair in patterns)
                 {
@@ -83,16 +88,16 @@ namespace interpreter
 
                     if (m.Success)
                     {
-                        symbols.Add(new Symbol(m.Value, pair.Key));
+                        symbols.Add(new Symbol(m.Value, pair.Key, position));
                         inputTrimmed = inputTrimmed.Substring(m.Value.Length);
 
                         break;
                     }
                 }
 
-                if (oldSize == symbols.Count)
+                if (previousCount == symbols.Count)
                 {
-                    var position = input.Length - inputTrimmed.Length + 1;
+                    
                     throw new LexicalException(position, input);
                 }
 
@@ -180,10 +185,15 @@ namespace interpreter
                     result.Push(double.Parse(symbol.Lexeme, CultureInfo.InvariantCulture));
                     continue;
                 }
+                
+                if (result.Count < 2)
+                {
+                    throw new SyntaxException("Too many operators");
+                }
 
                 var right = result.Pop();
                 var left = result.Pop();
-
+                
                 switch (token)
                 {
                     case Token.Addiction:
@@ -206,6 +216,11 @@ namespace interpreter
                         result.Push(Math.Pow(left, right));
                         break;
                 }
+            }
+            
+            if (result.Count > 1)
+            {
+                throw new SyntaxException("Too many operands");
             }
 
             return result.Pop();

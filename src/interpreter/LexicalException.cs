@@ -1,20 +1,9 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace interpreter
 {
-    internal class LexicalException : Exception
+    internal class LexicalException : InterpreterException
     {
-        private readonly string message;
-
-        internal string FormattedMessage
-        {
-            get
-            {
-                return message;
-            }
-        }
-
         internal LexicalException(int position, string input)
         {
             var sb = new StringBuilder();

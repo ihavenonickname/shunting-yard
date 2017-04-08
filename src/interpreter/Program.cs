@@ -16,11 +16,11 @@ namespace interpreter
                 Console.WriteLine("  expression - Arithmetic expression with double numbers and operators");
                 Console.WriteLine();
                 Console.WriteLine("OPERATORS");
-                Console.WriteLine("  + Addition");
-                Console.WriteLine("  - Subtraction");
-                Console.WriteLine("  * Multiplication");
-                Console.WriteLine("  / Division");
-                Console.WriteLine("  ^ Power");
+                Console.WriteLine("  +  Addition");
+                Console.WriteLine("  -  Subtraction");
+                Console.WriteLine("  ** Multiplication");
+                Console.WriteLine("  /  Division");
+                Console.WriteLine("  ^  Power");
 
                 return;
             }

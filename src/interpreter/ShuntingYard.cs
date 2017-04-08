@@ -65,11 +65,11 @@ namespace interpreter
             patterns.Add(Token.Number, p(@"-?\d+(\.\d+)?"));
             patterns.Add(Token.LeftParentheses, p(@"\("));
             patterns.Add(Token.RightParentheses, p(@"\)"));
+            patterns.Add(Token.Power, p(@"\*\*"));
             patterns.Add(Token.Addiction, p(@"\+"));
             patterns.Add(Token.Subtraction, p(@"-"));
             patterns.Add(Token.Multiplication, p(@"\*"));
             patterns.Add(Token.Division, p(@"/"));
-            patterns.Add(Token.Power, p(@"\^"));
         }
 
         private List<Symbol> Symbolize(string input)

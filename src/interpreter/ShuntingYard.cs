@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Globalization;
 
 namespace interpreter
 {
@@ -13,33 +12,7 @@ namespace interpreter
             Left,
             Right
         }
-
-        internal enum Token
-        {
-            Number,
-            Addiction,
-            Subtraction,
-            Multiplication,
-            Division,
-            Power,
-            LeftParenthesis,
-            RightParenthesis
-        }
-
-        internal struct Symbol
-        {
-            public readonly string Lexeme;
-            public readonly Token Token;
-            public readonly int Position;
-
-            public Symbol(string lexeme, Token token, int position)
-            {
-                Lexeme = lexeme;
-                Token = token;
-                Position = position;
-            }
-        }
-
+        
         private static readonly Dictionary<Token, int> precedence = new Dictionary<Token, int>();
         private static readonly Dictionary<Token, Associativity> associativity = new Dictionary<Token, Associativity>();
         private static readonly Dictionary<Token, Regex> patterns = new Dictionary<Token, Regex>();
@@ -60,16 +33,16 @@ namespace interpreter
             associativity.Add(Token.Division, Associativity.Left);
             associativity.Add(Token.Power, Associativity.Right);
 
-            Func<string, Regex> p = str => new Regex($"^{str}");
+            Func<string, Regex> regex = str => new Regex("^" + str);
 
-            patterns.Add(Token.Number, p(@"-?\d+(\.\d+)?"));
-            patterns.Add(Token.LeftParenthesis, p(@"\("));
-            patterns.Add(Token.RightParenthesis, p(@"\)"));
-            patterns.Add(Token.Power, p(@"\*\*"));
-            patterns.Add(Token.Addiction, p(@"\+"));
-            patterns.Add(Token.Subtraction, p(@"-"));
-            patterns.Add(Token.Multiplication, p(@"\*"));
-            patterns.Add(Token.Division, p(@"/"));
+            patterns.Add(Token.Number, regex(@"-?\d+(\.\d+)?"));
+            patterns.Add(Token.LeftParenthesis, regex(@"\("));
+            patterns.Add(Token.RightParenthesis, regex(@"\)"));
+            patterns.Add(Token.Power, regex(@"\*\*"));
+            patterns.Add(Token.Addiction, regex(@"\+"));
+            patterns.Add(Token.Subtraction, regex(@"-"));
+            patterns.Add(Token.Multiplication, regex(@"\*"));
+            patterns.Add(Token.Division, regex(@"/"));
         }
 
         private List<Symbol> Symbolize(string input)
@@ -77,10 +50,9 @@ namespace interpreter
             var symbols = new List<Symbol>();
             var inputTrimmed = input.Trim();
 
-            while (inputTrimmed.Length > 0)
+            while (inputTrimmed.Any())
             {
                 var previousCount = symbols.Count;
-                var position = input.Length - inputTrimmed.Length + 1;
 
                 foreach (var pair in patterns)
                 {
@@ -88,7 +60,7 @@ namespace interpreter
 
                     if (m.Success)
                     {
-                        symbols.Add(new Symbol(m.Value, pair.Key, position));
+                        symbols.Add(new Symbol(m.Value, pair.Key));
                         inputTrimmed = inputTrimmed.Substring(m.Value.Length);
 
                         break;
@@ -97,7 +69,7 @@ namespace interpreter
 
                 if (previousCount == symbols.Count)
                 {
-                    
+                    var position = input.Length - inputTrimmed.Length + 1;
                     throw new LexicalException(position, input);
                 }
 
@@ -172,7 +144,7 @@ namespace interpreter
             }
         }
 
-        private List<Symbol> Parse(string input)
+        internal IEnumerable<Symbol> Parse(string input)
         {
             var operators = new Stack<Symbol>();
             var output = new Stack<Symbol>();
@@ -182,61 +154,7 @@ namespace interpreter
                 Shunt(operators, output, symbol);
             }
 
-            return output.Reverse().Concat(operators).ToList();
-        }
-
-        public double Interpret(string input)
-        {
-            var result = new Stack<double>();
-
-            foreach (var symbol in Parse(input))
-            {
-                var token = symbol.Token;
-
-                if (token == Token.Number)
-                {
-                    result.Push(double.Parse(symbol.Lexeme, CultureInfo.InvariantCulture));
-                    continue;
-                }
-                
-                if (result.Count < 2)
-                {
-                    throw new SyntaxException("Too many operators");
-                }
-
-                var right = result.Pop();
-                var left = result.Pop();
-                
-                switch (token)
-                {
-                    case Token.Addiction:
-                        result.Push(left + right);
-                        break;
-
-                    case Token.Subtraction:
-                        result.Push(left - right);
-                        break;
-
-                    case Token.Multiplication:
-                        result.Push(left * right);
-                        break;
-
-                    case Token.Division:
-                        result.Push(left / right);
-                        break;
-
-                    case Token.Power:
-                        result.Push(Math.Pow(left, right));
-                        break;
-                }
-            }
-            
-            if (result.Count > 1)
-            {
-                throw new SyntaxException("Too many operands");
-            }
-
-            return result.Pop();
+            return output.Reverse().Concat(operators);
         }
     }
 }

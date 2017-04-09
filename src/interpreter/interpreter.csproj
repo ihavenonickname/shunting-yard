@@ -42,12 +42,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interpreter.cs" />
     <Compile Include="InterpreterException.cs" />
     <Compile Include="LexicalException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShuntingYard.cs" />
+    <Compile Include="Symbol.cs" />
     <Compile Include="SyntaxException.cs" />
+    <Compile Include="Token.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -22,8 +22,8 @@ namespace interpreter
             Multiplication,
             Division,
             Power,
-            LeftParentheses,
-            RightParentheses
+            LeftParenthesis,
+            RightParenthesis
         }
 
         internal struct Symbol
@@ -46,8 +46,8 @@ namespace interpreter
 
         static ShuntingYard()
         {
-            precedence.Add(Token.LeftParentheses, 0);
-            precedence.Add(Token.RightParentheses, 0);
+            precedence.Add(Token.LeftParenthesis, 0);
+            precedence.Add(Token.RightParenthesis, 0);
             precedence.Add(Token.Addiction, 1);
             precedence.Add(Token.Subtraction, 1);
             precedence.Add(Token.Multiplication, 2);
@@ -63,8 +63,8 @@ namespace interpreter
             Func<string, Regex> p = str => new Regex($"^{str}");
 
             patterns.Add(Token.Number, p(@"-?\d+(\.\d+)?"));
-            patterns.Add(Token.LeftParentheses, p(@"\("));
-            patterns.Add(Token.RightParentheses, p(@"\)"));
+            patterns.Add(Token.LeftParenthesis, p(@"\("));
+            patterns.Add(Token.RightParenthesis, p(@"\)"));
             patterns.Add(Token.Power, p(@"\*\*"));
             patterns.Add(Token.Addiction, p(@"\+"));
             patterns.Add(Token.Subtraction, p(@"-"));
@@ -125,31 +125,44 @@ namespace interpreter
 
             if (token == Token.Number)
             {
+                // Rule 1: If the incoming symbol is operand, output it.
                 output.Push(symbol);
             }
-            else if (token == Token.LeftParentheses)
+            else if (token == Token.LeftParenthesis)
             {
+                // Rule 2: If the incoming symbol is left parenthesis, push it
+                // on the stack.
                 operators.Push(symbol);
             }
-            else if (token == Token.RightParentheses)
+            else if (token == Token.RightParenthesis)
             {
-                while (operators.Peek().Token != Token.LeftParentheses)
+                // Rule 3: If the incoming symbol is right parenthesis, discart
+                // it and output the stack until you see an left parenthesis,
+                // then discart it as well.
+                while (operators.Peek().Token != Token.LeftParenthesis)
                 {
                     output.Push(operators.Pop());
                 }
 
                 operators.Pop();
             }
-            else if (!operators.Any() || operators.Peek().Token == Token.LeftParentheses)
+            else if (!operators.Any() || operators.Peek().Token == Token.LeftParenthesis)
             {
+                // Rule 4: If the stack is empty or the top of the stack is
+                // left parenthesis, push the incoming symbol on the stack.
                 operators.Push(symbol);
             }
             else if (HasHigherPrecedenceOrIsRight(operators, symbol))
             {
+                // Rule 5: If the incoming symbol has either higher precedence
+                // than the operator on top of the stack or has the same 
+                // precedence and is right associative, push in on the stack.
                 operators.Push(symbol);
             }
             else
             {
+                // Rule 6: Output the stack until rule 5 gets true and then
+                // push the incoming symbol on the stack.
                 while (operators.Any() && !HasHigherPrecedenceOrIsRight(operators, symbol))
                 {
                     output.Push(operators.Pop());

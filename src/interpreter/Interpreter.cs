@@ -13,7 +13,7 @@ namespace interpreter
 
         static Interpreter()
         {
-            operations.Add(Token.Addiction, (left, right) => left + right);
+            operations.Add(Token.Addition, (left, right) => left + right);
             operations.Add(Token.Subtraction, (left, right) => left - right);
             operations.Add(Token.Multiplication, (left, right) => left * right);
             operations.Add(Token.Division, (left, right) => left / right);

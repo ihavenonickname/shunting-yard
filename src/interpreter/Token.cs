@@ -1,7 +1,7 @@
 ﻿internal enum Token
 {
     Number,
-    Addiction,
+    Addition,
     Subtraction,
     Multiplication,
     Division,

@@ -21,13 +21,13 @@ namespace interpreter
         {
             precedence.Add(Token.LeftParenthesis, 0);
             precedence.Add(Token.RightParenthesis, 0);
-            precedence.Add(Token.Addiction, 1);
+            precedence.Add(Token.Addition, 1);
             precedence.Add(Token.Subtraction, 1);
             precedence.Add(Token.Multiplication, 2);
             precedence.Add(Token.Division, 2);
             precedence.Add(Token.Power, 3);
 
-            associativity.Add(Token.Addiction, Associativity.Left);
+            associativity.Add(Token.Addition, Associativity.Left);
             associativity.Add(Token.Subtraction, Associativity.Left);
             associativity.Add(Token.Multiplication, Associativity.Left);
             associativity.Add(Token.Division, Associativity.Left);
@@ -39,7 +39,7 @@ namespace interpreter
             patterns.Add(Token.LeftParenthesis, regex(@"\("));
             patterns.Add(Token.RightParenthesis, regex(@"\)"));
             patterns.Add(Token.Power, regex(@"\*\*"));
-            patterns.Add(Token.Addiction, regex(@"\+"));
+            patterns.Add(Token.Addition, regex(@"\+"));
             patterns.Add(Token.Subtraction, regex(@"-"));
             patterns.Add(Token.Multiplication, regex(@"\*"));
             patterns.Add(Token.Division, regex(@"/"));

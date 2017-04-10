@@ -2,19 +2,19 @@
 
 namespace interpreter
 {
-    internal class LexicalException : InterpreterException
+    internal class ParserException : BaseException
     {
-        internal LexicalException(int position, string input)
+        internal ParserException(int position, string input)
         {
             var sb = new StringBuilder();
             var offset = new string(' ', position - 1);
 
             sb.AppendLine();
-            sb.AppendLine("Lexical error");
-            sb.AppendLine($"Symbol not recognized at position {position}");
+            sb.AppendLine("Error while parsing expression");
+            sb.AppendLine("Character not recognized at position " + position);
             sb.AppendLine();
             sb.AppendLine(input);
-            sb.AppendLine($"{offset}^");
+            sb.AppendLine(offset + "^");
 
             message = sb.ToString();
         }

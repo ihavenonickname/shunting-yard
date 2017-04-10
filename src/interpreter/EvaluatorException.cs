@@ -2,14 +2,14 @@
 
 namespace interpreter
 {
-    internal class SyntaxException : InterpreterException
+    internal class EvaluatorException : BaseException
     {
-        internal SyntaxException(string message)
+        internal EvaluatorException(string message)
         {
             var sb = new StringBuilder();
 
             sb.AppendLine();
-            sb.AppendLine("Syntax error");
+            sb.AppendLine("Error while evaluating expression");
             sb.AppendLine(message);
 
             this.message = sb.ToString();

@@ -1,48 +1,75 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace interpreter
 {
-    internal class ShuntingYard
+    internal class Parser
     {
         private enum Associativity
         {
             Left,
             Right
         }
+
+        private struct TokenPattern
+        {
+            public readonly Token Token;
+            public readonly Regex Pattern;
+
+            public TokenPattern(Token token, string pattern)
+            {
+                Token = token;
+                Pattern = new Regex("^" + pattern);
+            }
+        }
         
         private static readonly Dictionary<Token, int> precedence = new Dictionary<Token, int>();
         private static readonly Dictionary<Token, Associativity> associativity = new Dictionary<Token, Associativity>();
-        private static readonly Dictionary<Token, Regex> patterns = new Dictionary<Token, Regex>();
+        private static readonly List<TokenPattern> pattern = new List<TokenPattern>();
 
-        static ShuntingYard()
+        static Parser()
         {
             precedence.Add(Token.LeftParenthesis, 0);
             precedence.Add(Token.RightParenthesis, 0);
-            precedence.Add(Token.Addition, 1);
-            precedence.Add(Token.Subtraction, 1);
-            precedence.Add(Token.Multiplication, 2);
-            precedence.Add(Token.Division, 2);
-            precedence.Add(Token.Power, 3);
+            precedence.Add(Token.Equal, 1);
+            precedence.Add(Token.Different, 1);
+            precedence.Add(Token.Greater, 1);
+            precedence.Add(Token.GreaterEqual, 1);
+            precedence.Add(Token.Less, 1);
+            precedence.Add(Token.LessEqual, 1);
+            precedence.Add(Token.Addition, 2);
+            precedence.Add(Token.Subtraction, 2);
+            precedence.Add(Token.Multiplication, 3);
+            precedence.Add(Token.Division, 3);
+            precedence.Add(Token.Power, 4);
 
             associativity.Add(Token.Addition, Associativity.Left);
             associativity.Add(Token.Subtraction, Associativity.Left);
             associativity.Add(Token.Multiplication, Associativity.Left);
             associativity.Add(Token.Division, Associativity.Left);
             associativity.Add(Token.Power, Associativity.Right);
+            associativity.Add(Token.Equal, Associativity.Left);
+            associativity.Add(Token.Different, Associativity.Left);
+            associativity.Add(Token.Greater, Associativity.Left);
+            associativity.Add(Token.GreaterEqual, Associativity.Left);
+            associativity.Add(Token.Less, Associativity.Left);
+            associativity.Add(Token.LessEqual, Associativity.Left);
 
-            Func<string, Regex> regex = str => new Regex("^" + str);
-
-            patterns.Add(Token.Number, regex(@"-?\d+(\.\d+)?"));
-            patterns.Add(Token.LeftParenthesis, regex(@"\("));
-            patterns.Add(Token.RightParenthesis, regex(@"\)"));
-            patterns.Add(Token.Power, regex(@"\*\*"));
-            patterns.Add(Token.Addition, regex(@"\+"));
-            patterns.Add(Token.Subtraction, regex(@"-"));
-            patterns.Add(Token.Multiplication, regex(@"\*"));
-            patterns.Add(Token.Division, regex(@"/"));
+            pattern.Add(new TokenPattern(Token.Number, @"-?\d+(\.\d+)?"));
+            pattern.Add(new TokenPattern(Token.LeftParenthesis, @"\("));
+            pattern.Add(new TokenPattern(Token.RightParenthesis, @"\)"));
+            pattern.Add(new TokenPattern(Token.Power, @"\*\*"));
+            pattern.Add(new TokenPattern(Token.Addition, @"\+"));
+            pattern.Add(new TokenPattern(Token.Subtraction, @"-"));
+            pattern.Add(new TokenPattern(Token.Multiplication, @"\*"));
+            pattern.Add(new TokenPattern(Token.Division, @"/"));
+            pattern.Add(new TokenPattern(Token.Equal, @"=="));
+            pattern.Add(new TokenPattern(Token.Different, @"<>"));
+            pattern.Add(new TokenPattern(Token.GreaterEqual, @">="));
+            pattern.Add(new TokenPattern(Token.LessEqual, @"<="));
+            pattern.Add(new TokenPattern(Token.Greater, @">"));
+            pattern.Add(new TokenPattern(Token.Less, @"<"));
         }
 
         private List<Symbol> Symbolize(string input)
@@ -54,13 +81,13 @@ namespace interpreter
             {
                 var previousCount = symbols.Count;
 
-                foreach (var pair in patterns)
+                foreach (var item in pattern)
                 {
-                    var m = pair.Value.Match(inputTrimmed);
+                    var m = item.Pattern.Match(inputTrimmed);
 
                     if (m.Success)
                     {
-                        symbols.Add(new Symbol(m.Value, pair.Key));
+                        symbols.Add(new Symbol(m.Value, item.Token));
                         inputTrimmed = inputTrimmed.Substring(m.Value.Length);
 
                         break;
@@ -70,7 +97,7 @@ namespace interpreter
                 if (previousCount == symbols.Count)
                 {
                     var position = input.Length - inputTrimmed.Length + 1;
-                    throw new LexicalException(position, input);
+                    throw new ParserException(position, input);
                 }
 
                 inputTrimmed = inputTrimmed.Trim();

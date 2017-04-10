@@ -5,22 +5,28 @@ using System.Linq;
 
 namespace interpreter
 {
-    using BinaryOperation = Func<double, double, double>;
+    using BinaryOperation = Func<double, double, object>;
 
-    class Interpreter
+    class Evaluator
     {
         private static readonly Dictionary<Token, BinaryOperation> operations = new Dictionary<Token, BinaryOperation>();
 
-        static Interpreter()
+        static Evaluator()
         {
             operations.Add(Token.Addition, (left, right) => left + right);
             operations.Add(Token.Subtraction, (left, right) => left - right);
             operations.Add(Token.Multiplication, (left, right) => left * right);
             operations.Add(Token.Division, (left, right) => left / right);
-            operations.Add(Token.Power, Math.Pow);
+            operations.Add(Token.Power, (left, right) => Math.Pow(left, right));
+            operations.Add(Token.Equal, (left, right) => left == right);
+            operations.Add(Token.Different, (left, right) => left != right);
+            operations.Add(Token.Greater, (left, right) => left > right);
+            operations.Add(Token.GreaterEqual, (left, right) => left >= right);
+            operations.Add(Token.Less, (left, right) => left < right);
+            operations.Add(Token.LessEqual, (left, right) => left <= right);
         }
         
-        private void Update(Stack<double> results, Symbol symbol)
+        private void Update(Stack<object> results, Symbol symbol)
         {
             if (symbol.Token == Token.Number)
             {
@@ -35,20 +41,24 @@ namespace interpreter
 
             try
             {
-                right = results.Pop();
-                left = results.Pop();
+                right = (double) results.Pop();
+                left = (double) results.Pop();
             }
             catch (InvalidOperationException)
             {
-                throw new SyntaxException("Too few operands");
+                throw new EvaluatorException("Too few operands");
+            }
+            catch (InvalidCastException)
+            {
+                throw new EvaluatorException("Cannot compare booleans");
             }
 
             results.Push(operations[symbol.Token](left, right));
         }
 
-        internal double Evaluate(IEnumerable<Symbol> symbols)
+        internal object Evaluate(IEnumerable<Symbol> symbols)
         {
-            var answer = symbols.Aggregate(new Stack<double>(), (results, symbol) =>
+            var answer = symbols.Aggregate(new Stack<object>(), (results, symbol) =>
             {
                 Update(results, symbol);
 
@@ -57,7 +67,7 @@ namespace interpreter
             
             if (answer.Count > 1)
             {
-                throw new SyntaxException("Too many operands");
+                throw new EvaluatorException("Too many operands");
             }
 
             return answer.Pop();

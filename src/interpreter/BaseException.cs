@@ -2,7 +2,7 @@
 
 namespace interpreter
 {
-    class InterpreterException : Exception
+    class BaseException : Exception
     {
         protected string message;
 

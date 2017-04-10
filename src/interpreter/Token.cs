@@ -7,5 +7,11 @@
     Division,
     Power,
     LeftParenthesis,
-    RightParenthesis
+    RightParenthesis,
+    Equal,
+    Different,
+    Less,
+    LessEqual,
+    Greater,
+    GreaterEqual
 }

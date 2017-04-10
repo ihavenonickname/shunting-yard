@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -11,22 +12,9 @@ namespace interpreter
             Left,
             Right
         }
-
-        private struct TokenPattern
-        {
-            public readonly Token Token;
-            public readonly Regex Pattern;
-
-            public TokenPattern(Token token, string pattern)
-            {
-                Token = token;
-                Pattern = new Regex("^" + pattern);
-            }
-        }
         
         private static readonly Dictionary<Token, int> precedence = new Dictionary<Token, int>();
         private static readonly Dictionary<Token, Associativity> associativity = new Dictionary<Token, Associativity>();
-        private static readonly List<TokenPattern> pattern = new List<TokenPattern>();
 
         static Parser()
         {
@@ -55,21 +43,13 @@ namespace interpreter
             associativity.Add(Token.GreaterEqual, Associativity.Left);
             associativity.Add(Token.Less, Associativity.Left);
             associativity.Add(Token.LessEqual, Associativity.Left);
+        }
 
-            pattern.Add(new TokenPattern(Token.Number, @"-?\d+(\.\d+)?"));
-            pattern.Add(new TokenPattern(Token.LeftParenthesis, @"\("));
-            pattern.Add(new TokenPattern(Token.RightParenthesis, @"\)"));
-            pattern.Add(new TokenPattern(Token.Power, @"\*\*"));
-            pattern.Add(new TokenPattern(Token.Addition, @"\+"));
-            pattern.Add(new TokenPattern(Token.Subtraction, @"-"));
-            pattern.Add(new TokenPattern(Token.Multiplication, @"\*"));
-            pattern.Add(new TokenPattern(Token.Division, @"/"));
-            pattern.Add(new TokenPattern(Token.Equal, @"=="));
-            pattern.Add(new TokenPattern(Token.Different, @"<>"));
-            pattern.Add(new TokenPattern(Token.GreaterEqual, @">="));
-            pattern.Add(new TokenPattern(Token.LessEqual, @"<="));
-            pattern.Add(new TokenPattern(Token.Greater, @">"));
-            pattern.Add(new TokenPattern(Token.Less, @"<"));
+        private Pattern GetPattern(Token token)
+        {
+            var memInfo = token.GetType().GetMember($"{token}");
+            var attributes = memInfo.First().GetCustomAttributes(typeof(Pattern), false);
+            return (Pattern)attributes.First();
         }
 
         private List<Symbol> Symbolize(string input)
@@ -81,13 +61,14 @@ namespace interpreter
             {
                 var previousCount = symbols.Count;
 
-                foreach (var item in pattern)
+                foreach (Token token in Enum.GetValues(typeof(Token)))
                 {
-                    var m = item.Pattern.Match(inputTrimmed);
+                    var pattern = GetPattern(token);
+                    var m = pattern.Match(inputTrimmed);
 
                     if (m.Success)
                     {
-                        symbols.Add(new Symbol(m.Value, item.Token));
+                        symbols.Add(new Symbol(m.Value, token));
                         inputTrimmed = inputTrimmed.Substring(m.Value.Length);
 
                         break;
